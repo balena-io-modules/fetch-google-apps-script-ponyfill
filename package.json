@@ -30,7 +30,7 @@
     "karma-safaritechpreview-launcher": "0.0.6",
     "mocha": "^4.0.1",
     "promise-polyfill": "6.0.2",
-    "rollup": "^0.59.1",
+    "rollup": "^2.10.0",
     "url-search-params": "0.6.1"
   },
   "files": [
