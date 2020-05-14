@@ -1,10 +1,19 @@
 {
-  "name": "whatwg-fetch",
-  "description": "A window.fetch polyfill.",
-  "version": "3.0.0",
+  "name": "fetch-google-apps-script-ponyfill",
+  "description": "A fetch ponyfill for Google Apps Script.",
+  "version": "0.1.0",
   "main": "./dist/fetch.umd.js",
   "module": "./fetch.js",
-  "repository": "github/fetch",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/balena-io-modules/fetch-google-apps-script-ponyfill.git"
+  },
+  "keywords": [
+    "whatwg",
+    "fetch",
+    "google apps script",
+    "ponyfill"
+  ],
   "license": "MIT",
   "devDependencies": {
     "abortcontroller-polyfill": "^1.1.9",
