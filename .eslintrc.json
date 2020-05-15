@@ -3,7 +3,8 @@
     "sourceType": "module"
   },
   "globals": {
-    "WHATWGFetch": true,
+    "fetchGoogleAppsScriptPonyfill": true,
+    "UrlFetchApp": true,
     "ArrayBuffer": true,
     "DataView": true,
     "Promise": true,
