@@ -1,9 +1,9 @@
 var support = {
-  searchParams: 'URLSearchParams' in self,
-  iterable: 'Symbol' in self && 'iterator' in Symbol,
+  searchParams: typeof URLSearchParams !== 'undefined',
+  iterable: typeof Symbol !== 'undefined' && 'iterator' in Symbol,
   blob:
-    'FileReader' in self &&
-    'Blob' in self &&
+    typeof FileReader !== 'undefined' &&
+    typeof Blob !== 'undefined' &&
     (function () {
       try {
         new Blob()
@@ -12,8 +12,8 @@ var support = {
         return false
       }
     })(),
-  formData: 'FormData' in self,
-  arrayBuffer: 'ArrayBuffer' in self,
+  formData: typeof FormData !== 'undefined',
+  arrayBuffer: typeof ArrayBuffer !== 'undefined',
 }
 
 function isDataView(obj) {
@@ -365,22 +365,6 @@ function decode(body) {
   return form
 }
 
-function parseHeaders(rawHeaders) {
-  var headers = new Headers()
-  // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
-  // https://tools.ietf.org/html/rfc7230#section-3.2
-  var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ')
-  preProcessedHeaders.split(/\r?\n/).forEach(function (line) {
-    var parts = line.split(':')
-    var key = parts.shift().trim()
-    if (key) {
-      var value = parts.join(':').trim()
-      headers.append(key, value)
-    }
-  })
-  return headers
-}
-
 Body.call(Request.prototype)
 
 export function Response(bodyInit, options) {
@@ -424,93 +408,32 @@ Response.redirect = function (url, status) {
   return new Response(null, {status: status, headers: {location: url}})
 }
 
-export var DOMException = self.DOMException
-try {
-  new DOMException()
-} catch (err) {
-  DOMException = function (message, name) {
-    this.message = message
-    this.name = name
-    var error = Error(message)
-    this.stack = error.stack
-  }
-  DOMException.prototype = Object.create(Error.prototype)
-  DOMException.prototype.constructor = DOMException
+var defaults = {
+  // To replicate the default browser fetch behavior.
+  muteHttpExceptions: true,
 }
 
 export function fetch(input, init) {
-  return new Promise(function (resolve, reject) {
-    var request = new Request(input, init)
-
-    if (request.signal && request.signal.aborted) {
-      return reject(new DOMException('Aborted', 'AbortError'))
+  return Promise.resolve().then(function () {
+    if (init === undefined || init.muteHttpExceptions == null) {
+      init = Object.assign({}, defaults, init)
     }
 
-    var xhr = new XMLHttpRequest()
+    var urlFetchAppRequest = UrlFetchApp.fetch(input, init)
 
-    function abortXhr() {
-      xhr.abort()
+    var responseCode = urlFetchAppRequest.getResponseCode()
+
+    var options = {
+      status: responseCode,
+      statusText: responseCode === 200 ? 'OK' : '',
+      headers: urlFetchAppRequest.getHeaders(),
     }
-
-    xhr.onload = function () {
-      var options = {
-        status: xhr.status,
-        statusText: xhr.statusText,
-        headers: parseHeaders(xhr.getAllResponseHeaders() || ''),
-      }
-      options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
-      var body = 'response' in xhr ? xhr.response : xhr.responseText
-      resolve(new Response(body, options))
-    }
-
-    xhr.onerror = function () {
-      reject(new TypeError('Network request failed'))
-    }
-
-    xhr.ontimeout = function () {
-      reject(new TypeError('Network request failed'))
-    }
-
-    xhr.onabort = function () {
-      reject(new DOMException('Aborted', 'AbortError'))
-    }
-
-    xhr.open(request.method, request.url, true)
-
-    if (request.credentials === 'include') {
-      xhr.withCredentials = true
-    } else if (request.credentials === 'omit') {
-      xhr.withCredentials = false
-    }
-
-    if ('responseType' in xhr && support.blob) {
-      xhr.responseType = 'blob'
-    }
-
-    request.headers.forEach(function (value, name) {
-      xhr.setRequestHeader(name, value)
-    })
-
-    if (request.signal) {
-      request.signal.addEventListener('abort', abortXhr)
-
-      xhr.onreadystatechange = function () {
-        // DONE (success or failure)
-        if (xhr.readyState === 4) {
-          request.signal.removeEventListener('abort', abortXhr)
-        }
-      }
-    }
-
-    xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit)
+    options.url = input
+    var body = urlFetchAppRequest.getContentText()
+    return new Response(body, options)
   })
 }
 
 fetch.polyfill = true
 
-if (!self.fetch) {
-  self.fetch = fetch
-  self.Headers = Headers
-  self.Request = Request
-  self.Response = Response
-}
+export var supportedEnvironment = typeof UrlFetchApp !== 'undefined' && typeof UrlFetchApp.fetch === 'function'
