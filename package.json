@@ -1,7 +1,7 @@
 {
   "name": "fetch-google-apps-script-ponyfill",
   "description": "A fetch ponyfill for Google Apps Script.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "./dist/fetch.umd.js",
   "module": "./fetch.js",
   "repository": {
